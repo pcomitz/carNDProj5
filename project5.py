@@ -2,12 +2,17 @@
 """
 Created on Sat Sep 23 11:53:05 2017
 
-34 Search And Classify
+CarND Project 5
+This is the main python source file 
+for the Udacity CarND Vehicle Detection and Tracking 
+Project (Project 5) of semester 1. 
 
+Date of submission: 9/25/2017
 
 @author: pcomitz
-"""
-"""
+
+Typical Test result
+-------------------
 Output 9/23/2017
 len(cars) is: 8792
 cars example image: ../../../../../p5_train/vehicles/GTI_Far\image0210.png
@@ -152,35 +157,7 @@ def process_image(img):
     # xy_overlap tp 0.75.0.75 from -0.5,0.5
     # made it very slow and it msade it worse 
     # back to 0.5, -0.5 and 64, 64
-    """
-    windows = slide_window(image, x_start_stop= x_start_stop, y_start_stop=y_start_stop, 
-                    xy_window=(96, 96), xy_overlap=(0.5, 0.5))
-
-    # returns litstof windows that contain detections 
-    hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space, 
-                        spatial_size=spatial_size, hist_bins=hist_bins, 
-                        orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, 
-                        hog_channel=hog_channel, spatial_feat=spatial_feat, 
-                        hist_feat=hist_feat, hog_feat=hog_feat)                       
-
-    #heat map and false positives
-    heat = np.zeros_like(image[:,:,0]).astype(np.float)
-    
-    # Add heat to each box in box list
-    heat = add_heat(heat,hot_windows)
-    
-    # adding (left out by accident)
-    heat = apply_threshold(heat,1)
-    
-    # Visualize the heatmap when displaying    
-    heatmap = np.clip(heat, 0, 255)
-    
-    # Find final boxes from heatmap using label function
-    labels = label(heatmap)
-    """
-    
-    ### REPLACING TO FIND SLOWDOWN
+   
     # returns list of windows to search
     windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, 
                     xy_window=(96, 96), xy_overlap=(0.5, 0.5))
@@ -199,6 +176,9 @@ def process_image(img):
 
     # Add heat to each box in box list
     heat = add_heat(heat,hot_windows)
+    
+    # Apply threshold to help remove false positives
+    heat = apply_threshold(heat,1)
 
     # Visualize the heatmap when displaying    
     heatmap = np.clip(heat, 0, 255)
@@ -206,8 +186,6 @@ def process_image(img):
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
 
-    
-    
     # draw_img = draw_labeled_bboxes(np.copy(image), labels)
     # draw on original image
     draw_img = draw_labeled_bboxes(img, labels)
@@ -221,6 +199,7 @@ def process_image(img):
 
 # get the car training images (strings with path to images)
 path = '../../../../../p5_train/'
+
 images = []
 images = glob.glob('../../../../../p5_train/vehicles/GTI_Far/*.png')
 images.extend(glob.glob('../../../../../p5_train/vehicles/GTI_Left/*.png'))
@@ -330,67 +309,5 @@ clip1 = VideoFileClip('project_video.mp4')
 proj5_clip = clip1.fl_image(process_image) 
 proj5_clip.write_videofile(proj5_output, audio=False)
 
-
-
-"""
-# this is the image we should extract from the video
-image = mpimg.imread('test_images/test6.jpg')
-
-# draw image not used at the moment
-draw_image_copy = np.copy(image)
-
-# Uncomment the following line if you extracted training
-# data from .png images (scaled 0 to 1 by mpimg) and the
-# image you are searching is a .jpg (scaled 0 to 255)
-image = image.astype(np.float32)/255
-
-# returns list of windows to search
-# changed from 96,96 to 64,64
-windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, 
-                    xy_window=(64, 64), xy_overlap=(0.75, 0.75))
-
-# returns lits of windows that contain detections 
-hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space, 
-                        spatial_size=spatial_size, hist_bins=hist_bins, 
-                        orient=orient, pix_per_cell=pix_per_cell, 
-                        cell_per_block=cell_per_block, 
-                        hog_channel=hog_channel, spatial_feat=spatial_feat, 
-                        hist_feat=hist_feat, hog_feat=hog_feat)                       
-
-
-#heat map and false positives
-heat = np.zeros_like(image[:,:,0]).astype(np.float)
-
-# Add heat to each box in box list
-heat = add_heat(heat,hot_windows)
-
-# Visualize the heatmap when displaying    
-heatmap = np.clip(heat, 0, 255)
-
-# Find final boxes from heatmap using label function
-labels = label(heatmap)
-
-draw_img = draw_labeled_bboxes(np.copy(image), labels)
-
-fig = plt.figure()
-plt.subplot(121)
-plt.imshow(draw_img)
-mpimg.imsave('output_images/draw_img.jpg',draw_img)
-
-plt.title('Car Positions')
-plt.subplot(122)
-plt.imshow(heatmap, cmap='hot')
-
-#strange colors
-plt.imsave('output_images/heatMap_9_24_2017.jpg',heatmap, cmap='hot')
-plt.title('Heat Map')
-fig.tight_layout()
-
-
-
-window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)                    
-
-plt.imshow(window_img)
-"""
 
 

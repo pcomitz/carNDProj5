@@ -9,12 +9,11 @@ import numpy as np
 import cv2
 from scipy.ndimage.measurements import label
 
-
+# DEBUG
 # Read in image similar to one shown above 
 # image = mpimg.imread('test_image.jpg')
 # print('np.shape(image):', np.shape(image))
 # print("input image")
-
 # no bounding boxes on this image
 # plt.imshow(image)
 #heat = np.zeros_like(image[:,:,0]).astype(np.float)
@@ -25,10 +24,6 @@ def add_heat(heatmap, bbox_list):
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
         heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
-        
-        #phc debug
-        #print("box:", box[0][1],",",box[1][1],",",box[0][0],",",box[1][0])
-
     # Return updated heatmap
     return heatmap# Iterate through list of bboxes
     
@@ -54,26 +49,5 @@ def draw_labeled_bboxes(img, labels):
     return img
 
 
-"""
-print("np.shape(heat)", np.shape(heat))
-    
-# Apply threshold to help remove false positives
-heat = apply_threshold(heat,1)
 
-# Visualize the heatmap when displaying    
-heatmap = np.clip(heat, 0, 255)
-
-# Find final boxes from heatmap using label function
-labels = label(heatmap)
-draw_img = draw_labeled_bboxes(np.copy(image), labels)
-
-fig = plt.figure()
-plt.subplot(121)
-plt.imshow(draw_img)
-plt.title('Car Positions')
-plt.subplot(122)
-plt.imshow(heatmap, cmap='hot')
-plt.title('Heat Map')
-fig.tight_layout()
-"""
 

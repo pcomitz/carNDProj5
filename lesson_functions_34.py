@@ -3,7 +3,7 @@
 Created on Sat Sep 23 11:48:53 2017
 
 34 lesson_functions.py
-functions from prior sections 
+functions in
 
 get_hog_features
 bin_spatial
