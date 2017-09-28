@@ -1,7 +1,14 @@
 
 # Vehicle Detection and Tracking
 
-#### Paul Comitz 9/25/2017
+#### Resubmision Paul Comitz 9/27/2017
+The project is resubmitted to include comments made by the prior reviewer. Specifically, the following has been added: 
+A deque has been added to hold heatmaps from prior frames. After experimentation (and suggestion from reviewer), 15 frames have been kept as a history. As a result the bounding boxes are not as wobbly. There are still some false positives.  The code is discussed in the <i>Filter Multiple and False Detections</i> section of this writeup
+
+Also please note: The prior reviewer reported that images in the output directory of the github repository were corrupt. These images and have been double checked. They were all opened and viewed successfully.   
+
+The cohort eneded on September 4. I am almost out of time on this semester. A timely review (if possible) is requested.  
+
 
 ##### The goal of this project is to detect and track any vehicle which is in range of the vehicle. The pipeline to achieve this is as follows:
 1.  A Histogram of Oriented Gradients (HOG) feature extraction is performed on a labeled training set of images that are used to train a Linear SVM classifier. 
@@ -25,11 +32,15 @@ To begin, use the provided data to train a Linear SVM classifier. For vehicle I 
 
 The code to read the images is in the python file <code>project5.py</code> starting at (or about) line 200. Examples images from the data sets are shown below.
 
-Car Image
-![Car image](files/../vehicles/vehicles/GTI_Far/image0000.png)
+##### Car Example Image
 
-Not Car Image
-![notCar image](files/../non-vehicles/non-vehicles/Extras/extra1.png)
+
+ ![carsExample.jpg](attachment:carsExample.jpg)
+
+
+##### Not Car Example Image 
+![noncarExample.png](attachment:noncarExample.png)
+
 
 With the <b>HOG</b> technique gradient magnitude and direction is computed on a pixel by pixel basis.  In a 64 x 64 image : 
 - Divide the image into 8 x 8 cells
@@ -294,24 +305,77 @@ As described in class, multi-scale windows were used to accomodate vehicles at d
 ### Example Visualizations 
 
 #### Filter Multiple and False Detections 
-The outliers and duplicates were filtered using the heatmap technique shown in class. This code is contained in the python soucre file <code>multipleDetectionsAndFalsePositives_37.py</code>
+The outliers and duplicates were filtered using the heatmap technique shown in class. This code is contained in the python source file <code>multipleDetectionsAndFalsePositives_37.py</code>
 
-An example is shown in the image below. This image shows the detections and the heatmap from one of the test images.  
+Per a suggestion from one of the Udacity reviewers, a heatmap history was implemented. The history was implemneted as a double ended queue with a depth of 15. The deque is realized using the python <code>collctions.deque</code>. The strategy is described below. The code is found in the <code>project5.py</code>python source file. 
+
+1. Declare a global deque that can be usd in the <code>clip1.fl_image(process_image)</code> method
+    #add heatmap history
+    <code>
+    from collections import deque
+    global heatmap_history
+    heatmap_history = deque(maxlen=15)
+    </code>
+
+2. Create a heatmap as shown in class
+    <code>
+    #heat map and false positives
+    heat = np.zeros_like(image[:,:,0]).astype(np.float)
+
+    #Add heat to each box in box list
+    heat = add_heat(heat,hot_windows)
+    </code>
+    
+3. Append each heatmap to the deque. Since the deque has a max length of 15, the last 15 heatmaps are maintained.     
+   <code>
+   #add heatmap history
+    heatmap_history.append(heat)
+    </code>
+    
+4.  Sum the heatmaps. Each heatmap is a single channel,image size size array. Use <code>numpy</code>  to sum the heatmaps in the deque into a single image sized, single channel array. 
+    <code>
+     #combined is an image size array - sum of 
+     #all heat arrays 
+     combined = np.sum(heatmap_history, axis = 0)
+    </code>
+    
+5. Apply thresholding. After experimentation, a threshold of 3 was selected.  The <code>labels</code> function was used to determine the number of cars found in the image
+    <code>
+     #Apply threshold to help remove false positives
+      heat = apply_threshold(combined, 3)
+
+     #Visualize the heatmap when displaying    
+      heatmap = np.clip(heat, 0, 255)
+
+     #Find final boxes from heatmap using label function
+       labels = label(heatmap)
+    
+    </code>
+    
+6. Draw the labeled bounding boxes  
+    <code>
+    #draw_img = draw_labeled_bboxes(np.copy(image), labels)
+    #draw on original image
+    draw_img = draw_labeled_bboxes(img, labels)
+    </code>
+
+An example heatmap and detetcion image is shown in the below. This image shows the detections and the heatmap from one of the test images.  NOTE - this image and the heatmap is from the processing of a single example image. 
 
 ![image_and_heatMap.JPG](attachment:image_and_heatMap.JPG)
 
-#### Detection
+#### Detection Example
 Another example is shown below. This is a better view of the image above. It shows that the classifier has detetcued the black car and teh white car. A bounding box has been drawn around each detection. 
 ![draw_img.jpg](attachment:draw_img.jpg)
 
 ### Video Implementation
 
-The video is present in the github repository for this project. The name of the vidoe is <i>proj5.mp4.</i> 
+The video is present in the github repository for this project. The name of the video is <i>proj5.mp4.</i> 
+
 
 
 ### Discussion
 
-The project was quite challengeing. There is much more that could be done. My semester ended on September 4, so I am very time-constrained at this point. 
+The project was quite challengeing. There is much more that could be done. My semester ended on September 4, so I am very time-constrained at this point.  
 
 Observations and Areas for Improvement
 
