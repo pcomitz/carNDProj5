@@ -24,6 +24,10 @@ Using: 9 orientations 8 pixels per cell and 2 cells per block
 Feature vector length: 6108
 16.34 Seconds to train SVC...
 Test Accuracy of SVC =  0.9866
+
+
+RESUBMIT WITH HEATMAP MODS
+
 """
 
 import matplotlib.image as mpimg
@@ -41,6 +45,11 @@ from scipy.ndimage.measurements import label
 #from lesson_functions import *
 from lesson_functions_34 import *
 from multipleDetectionsAndFalsePositives_37 import *
+
+#add heatmap history
+from collections import deque
+global heatmap_history
+heatmap_history = deque(maxlen=15)
 
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
@@ -143,8 +152,8 @@ def process_image(img):
     spatial_feat = True # Spatial features on or off
     hist_feat = True # Histogram features on or off
     hog_feat = True # HOG features on or off
-    y_start_stop = [350, 700] # Min and max in y to search in slide_window()
-    x_start_stop = [None,None] # changed to  200, 1280 then changed back  
+    y_start_stop = [400, 700] # Min and max in y to search in slide_window()
+    x_start_stop = [400,None] # changed to  200, 1280 then changed back  
  
     # per forum, copy image that is passed in
     # perform processing on copy
@@ -155,11 +164,11 @@ def process_image(img):
     # returns list of windows to search
     # changed xy_window to 64,64 from 96,96, trying 32, 32
     # xy_overlap tp 0.75.0.75 from -0.5,0.5
-    # made it very slow and it msade it worse 
+    # made it very slow and it made it worse 
     # back to 0.5, -0.5 and 64, 64
    
     # returns list of windows to search
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop, 
+    windows = slide_window(image, x_start_stop=[400, None], y_start_stop=y_start_stop, 
                     xy_window=(96, 96), xy_overlap=(0.5, 0.5))
 
     # returns lits of windows that contain detections 
@@ -177,8 +186,16 @@ def process_image(img):
     # Add heat to each box in box list
     heat = add_heat(heat,hot_windows)
     
+    #add heatmap history
+    heatmap_history.append(heat)
+    
+    # combined is an image size array - sum of 
+    # all heat arrays 
+    combined = np.sum(heatmap_history, axis = 0)
+    
     # Apply threshold to help remove false positives
-    heat = apply_threshold(heat,1)
+    # heat = apply_threshold(heat,1)
+    heat = apply_threshold(combined, 4)
 
     # Visualize the heatmap when displaying    
     heatmap = np.clip(heat, 0, 255)
@@ -196,32 +213,42 @@ def process_image(img):
 # B E G I N
 ###########
 
-
 # get the car training images (strings with path to images)
-path = '../../../../../p5_train/'
+# path = '../../../../../p5_train/'
+path = './'
 
 images = []
+"""
 images = glob.glob('../../../../../p5_train/vehicles/GTI_Far/*.png')
 images.extend(glob.glob('../../../../../p5_train/vehicles/GTI_Left/*.png'))
 images.extend(glob.glob('../../../../../p5_train/vehicles/GTI_MiddleClose/*.png'))
 images.extend(glob.glob('../../../../../p5_train/vehicles/GTI_Right/*.png'))
-images.extend(glob.glob('../../../../../p5_train/vehicles/KITTI_Extracted/*.png'))               
+images.extend(glob.glob('../../../../../p5_train/vehicles/KITTI_Extracted/*.png')) 
+"""      
+
+#laptop
+images = glob.glob('vehicles/GTI_Far/*.png')
+images.extend(glob.glob(path+'vehicles/vehicles/GTI_Left/*.png'))
+images.extend(glob.glob(path+'vehicles/vehicles/GTI_MiddleClose/*.png'))
+images.extend(glob.glob(path+'vehicles/vehicles/GTI_Right/*.png'))
+images.extend(glob.glob(path+'vehicles/vehicles/KITTI_Extracted/*.png')) 
+
+      
 cars = []
 for image in images:
         cars.append(image)
         
-
 print("len(cars) is:", len(cars))     
 random.randint(0,len(cars)-1)
 image = mpimg.imread(cars[random.randint(0,len(cars)-1)])
 print("cars example image:", cars[random.randint(0,len(cars)-1)])
-#plt.imshow(image)   
+plt.imshow(image)   
 
 #get the not cars training images
 #nonimages = []
-wpath = path +'non-vehicles/Extras/*.png'
-nimages = glob.glob(wpath)
-nimages.extend(glob.glob(path+'non-vehicles/GTI/*.png'))
+#wpath = 'non-vehicles/Extras/*.png'
+nimages = glob.glob('non-vehicles/non-vehicles/Extras/*.png')
+nimages.extend(glob.glob('non-vehicles/non-vehicles/GTI/*.png'))
 
 notcars = []
 for image in nimages:
@@ -235,7 +262,7 @@ print("notcars example image:", notcars[random.randint(0,len(notcars)-1)])
 #plt.imshow(image)   
 
 #phc
-sample_size = 8000
+sample_size = 7900
 cars = cars[0:sample_size]
 notcars = notcars[0:sample_size]  
 
