@@ -11775,7 +11775,11 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Vehicle-Detection-and-Tracking">Vehicle Detection and Tracking<a class="anchor-link" href="#Vehicle-Detection-and-Tracking">&#182;</a></h1><h4 id="Paul-Comitz-9/25/2017">Paul Comitz 9/25/2017<a class="anchor-link" href="#Paul-Comitz-9/25/2017">&#182;</a></h4><h5 id="The-goal-of-this-project-is-to-detect-and-track-any-vehicle-which-is-in-range-of-the-vehicle.-The-pipeline-to-achieve-this-is-as-follows:">The goal of this project is to detect and track any vehicle which is in range of the vehicle. The pipeline to achieve this is as follows:<a class="anchor-link" href="#The-goal-of-this-project-is-to-detect-and-track-any-vehicle-which-is-in-range-of-the-vehicle.-The-pipeline-to-achieve-this-is-as-follows:">&#182;</a></h5><ol>
+<h1 id="Vehicle-Detection-and-Tracking">Vehicle Detection and Tracking<a class="anchor-link" href="#Vehicle-Detection-and-Tracking">&#182;</a></h1><h4 id="Resubmision-Paul-Comitz-9/27/2017">Resubmision Paul Comitz 9/27/2017<a class="anchor-link" href="#Resubmision-Paul-Comitz-9/27/2017">&#182;</a></h4><p>The project is resubmitted to include comments made by the prior reviewer. Specifically, the following has been added: 
+A deque has been added to hold heatmaps from prior frames. After experimentation (and suggestion from reviewer), 15 frames have been kept as a history. As a result the bounding boxes are not as wobbly. There are still some false positives.  The code is discussed in the <i>Filter Multiple and False Detections</i> section of this writeup</p>
+<p>Also please note: The prior reviewer reported that images in the output directory of the github repository were corrupt. These images and have been double checked. They were all opened and viewed successfully.</p>
+<p>The cohort eneded on September 4. I am almost out of time on this semester. A timely review (if possible) is requested.</p>
+<h5 id="The-goal-of-this-project-is-to-detect-and-track-any-vehicle-which-is-in-range-of-the-vehicle.-The-pipeline-to-achieve-this-is-as-follows:">The goal of this project is to detect and track any vehicle which is in range of the vehicle. The pipeline to achieve this is as follows:<a class="anchor-link" href="#The-goal-of-this-project-is-to-detect-and-track-any-vehicle-which-is-in-range-of-the-vehicle.-The-pipeline-to-achieve-this-is-as-follows:">&#182;</a></h5><ol>
 <li>A Histogram of Oriented Gradients (HOG) feature extraction is performed on a labeled training set of images that are used to train a Linear SVM classifier. </li>
 <li>A color transform, binned color features, as well as histograms of color, are used with the HOG feature vector.</li>
 <li>Features are normalized abd randomized for training and testing.</li>
@@ -11817,10 +11821,8 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>Car Image
-<img src="../vehicles/vehicles/GTI_Far/image0000.png" alt="Car image"></p>
-<p>Not Car Image
-<img src="../non-vehicles/non-vehicles/Extras/extra1.png" alt="notCar image"></p>
+<h5 id="Car-Example-Image">Car Example Image<a class="anchor-link" href="#Car-Example-Image">&#182;</a></h5><p><img src="attachment:carsExample.jpg" alt="carsExample.jpg"></p>
+<h5 id="Not-Car-Example-Image">Not Car Example Image<a class="anchor-link" href="#Not-Car-Example-Image">&#182;</a></h5><p><img src="attachment:noncarExample.png" alt="noncarExample.png"></p>
 
 </div>
 </div>
@@ -14150,8 +14152,60 @@ For these 10 labels:  [ 0.  0.  0.  0.  0.  0.  1.  1.  1.  1.]
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Filter-Multiple-and-False-Detections">Filter Multiple and False Detections<a class="anchor-link" href="#Filter-Multiple-and-False-Detections">&#182;</a></h4><p>The outliers and duplicates were filtered using the heatmap technique shown in class. This code is contained in the python soucre file <code>multipleDetectionsAndFalsePositives_37.py</code></p>
-<p>An example is shown in the image below. This image shows the detections and the heatmap from one of the test images.</p>
+<h4 id="Filter-Multiple-and-False-Detections">Filter Multiple and False Detections<a class="anchor-link" href="#Filter-Multiple-and-False-Detections">&#182;</a></h4><p>The outliers and duplicates were filtered using the heatmap technique shown in class. This code is contained in the python source file <code>multipleDetectionsAndFalsePositives_37.py</code></p>
+<p>Per a suggestion from one of the Udacity reviewers, a heatmap history was implemented. The history was implemneted as a double ended queue with a depth of 15. The deque is realized using the python <code>collctions.deque</code>. The strategy is described below. The code is found in the <code>project5.py</code>python source file.</p>
+<ol>
+<li><p>Declare a global deque that can be usd in the <code>clip1.fl_image(process_image)</code> method
+ #add heatmap history
+ <code>
+ from collections import deque
+ global heatmap_history
+ heatmap_history = deque(maxlen=15)
+ </code></p>
+</li>
+<li><p>Create a heatmap as shown in class
+ <code>
+ #heat map and false positives
+ heat = np.zeros_like(image[:,:,0]).astype(np.float)</p>
+<p>#Add heat to each box in box list
+ heat = add_heat(heat,hot_windows)
+ &lt;/code&gt;</p>
+</li>
+<li><p>Append each heatmap to the deque. Since the deque has a max length of 15, the last 15 heatmaps are maintained.<br>
+<code>
+#add heatmap history
+ heatmap_history.append(heat)
+ </code></p>
+</li>
+<li><p>Sum the heatmaps. Each heatmap is a single channel,image size size array. Use <code>numpy</code>  to sum the heatmaps in the deque into a single image sized, single channel array. 
+<code>
+ #combined is an image size array - sum of 
+ #all heat arrays 
+ combined = np.sum(heatmap_history, axis = 0)
+</code></p>
+</li>
+<li><p>Apply thresholding. After experimentation, a threshold of 3 was selected.  The <code>labels</code> function was used to determine the number of cars found in the image
+ <code>
+  #Apply threshold to help remove false positives
+   heat = apply_threshold(combined, 3)</p>
+<p>#Visualize the heatmap when displaying<br>
+   heatmap = np.clip(heat, 0, 255)</p>
+<p>#Find final boxes from heatmap using label function</p>
+
+<pre><code>labels = label(heatmap)
+
+</code></pre>
+<p>&lt;/code&gt;</p>
+</li>
+<li><p>Draw the labeled bounding boxes<br>
+ <code>
+ #draw_img = draw_labeled_bboxes(np.copy(image), labels)
+ #draw on original image
+ draw_img = draw_labeled_bboxes(img, labels)
+ </code></p>
+</li>
+</ol>
+<p>An example heatmap and detetcion image is shown in the below. This image shows the detections and the heatmap from one of the test images.  NOTE - this image and the heatmap is from the processing of a single example image.</p>
 <p><img src="attachment:image_and_heatMap.JPG" alt="image_and_heatMap.JPG"></p>
 
 </div>
@@ -14161,7 +14215,7 @@ For these 10 labels:  [ 0.  0.  0.  0.  0.  0.  1.  1.  1.  1.]
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h4 id="Detection">Detection<a class="anchor-link" href="#Detection">&#182;</a></h4><p>Another example is shown below. This is a better view of the image above. It shows that the classifier has detetcued the black car and teh white car. A bounding box has been drawn around each detection. 
+<h4 id="Detection-Example">Detection Example<a class="anchor-link" href="#Detection-Example">&#182;</a></h4><p>Another example is shown below. This is a better view of the image above. It shows that the classifier has detetcued the black car and teh white car. A bounding box has been drawn around each detection. 
 <img src="attachment:draw_img.jpg" alt="draw_img.jpg"></p>
 
 </div>
@@ -14171,7 +14225,7 @@ For these 10 labels:  [ 0.  0.  0.  0.  0.  0.  1.  1.  1.  1.]
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Video-Implementation">Video Implementation<a class="anchor-link" href="#Video-Implementation">&#182;</a></h3><p>The video is present in the github repository for this project. The name of the vidoe is <i>proj5.mp4.</i></p>
+<h3 id="Video-Implementation">Video Implementation<a class="anchor-link" href="#Video-Implementation">&#182;</a></h3><p>The video is present in the github repository for this project. The name of the video is <i>proj5.mp4.</i></p>
 
 </div>
 </div>
